@@ -4,6 +4,8 @@
 #include <opencv2/opencv.hpp>
 using namespace cv;
 using namespace std;
+#include <sstream>
+#include <vector>
 
 void ResourceParse(string& Addr, string& dstAddr);
 void ImageCutToBmp(string& addr, string& name, int x, int y, int w, int h, string& dstAddr);
@@ -29,7 +31,7 @@ int main(int ac, char** av)
 
 	for (RscObj obj: vector)
 	{
-		string dstAddr = "../APIResourceParsed/" + obj.folderName + "/";
+		string dstAddr = "../APIResourcesParsed/" + obj.folderName + "/";
 		ResourceParse(obj.Addr, dstAddr);
 	}
 
@@ -62,11 +64,26 @@ void ResourceParse(string& Addr, string& dstAddr)
 	Json::Value frames = (*textures.begin())["frames"];
 	for (auto it = frames.begin(); it != frames.end(); ++it)
 	{		
-		string imgName = (*it)["filename"].asString();
+		string parseName = (*it)["filename"].asString();
 		int x = (*it)["frame"]["x"].asInt();
 		int y = (*it)["frame"]["y"].asInt();
 		int w = (*it)["frame"]["w"].asInt();
 		int h = (*it)["frame"]["h"].asInt();
+
+
+		// image.png -> image
+		string imgName;
+		istringstream ss(parseName);
+		string buffer;
+		vector<string> v;
+		v.clear();
+
+		while (getline(ss, buffer, '.'))
+		{
+			v.push_back(buffer);
+		}
+
+		imgName = v[0];
 
 		ImageCutToBmp(imgAddr, imgName, x, y, w, h, dstAddr);
 	}
@@ -89,9 +106,10 @@ void ImageCutToBmp(string& imgAddr, string& name, int x, int y, int w, int h, st
 
 	imshow("결과 이미지", rect_img);
 
-	// 이미지 저장
+	// 이미지 저장 .png.bmp로 저장되는 문제 발생 -> .bmp로 저장
 	imwrite(dstAddr + name + ".bmp", rect_img);
 
-	waitKey(0);
+	//waitKey(0);
 
 }
+
